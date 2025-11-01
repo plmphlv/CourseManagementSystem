@@ -1,10 +1,5 @@
-﻿using Application.Common.Exceptions;
-using Application.Common.Interfaces;
-using Application.Common.Models;
-using Application.Users.Commands.Register;
-using FluentValidation;
+﻿using Application.Users.Commands.Register;
 using FluentValidation.Results;
-using MediatR;
 
 namespace Application.Users.Commands.ChangePassword
 {

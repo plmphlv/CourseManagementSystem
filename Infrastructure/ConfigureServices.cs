@@ -44,7 +44,8 @@ namespace Infrastructure
 
 
             services.AddTransient<IDateTime, DateTimeService>();
-            services.AddScoped<IdentityService, IdentityService>();
+
+            services.AddScoped<IIdentityService, IdentityService>();
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
@@ -68,6 +69,7 @@ namespace Infrastructure
                             b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
         }
 
         private static void AddTokenBasedAuthentication(this IServiceCollection services, IConfiguration configuration)

@@ -1,5 +1,6 @@
 ﻿using Application.Common.Models;
 using Application.Users.Commands.Register;
+using Domain.Entities;
 using System.Security.Claims;
 
 namespace Application.Common.Interfaces
@@ -7,6 +8,8 @@ namespace Application.Common.Interfaces
     public interface IIdentityService
     {
         Task<bool> ValidateLoginAsync(string identityCredential, string password, CancellationToken cancellationToken);
+
+        Task<User?> FindUserByIdAsync(string id);
 
         Task<IEnumerable<Claim>> GetUserClaimsAsync(string identityCredential, CancellationToken cancellationToken);
 

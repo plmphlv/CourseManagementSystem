@@ -1,8 +1,4 @@
-﻿using Application.Common.Interfaces;
-using Application.Common.Models;
-using FluentValidation;
-using FluentValidation.Results;
-using MediatR;
+﻿using FluentValidation.Results;
 
 namespace Application.Users.Commands.Register
 {

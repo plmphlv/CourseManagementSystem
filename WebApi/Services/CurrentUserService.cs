@@ -19,6 +19,6 @@ namespace WebApi.Services
 
         public string? AccountId => httpContextAccessor.HttpContext?.User.FindFirstValue(InfrastructureConstants.AccountId);
 
-        public string? StaffId => httpContextAccessor.HttpContext?.User.FindFirstValue(InfrastructureConstants.StaffId);
+        public string? StaffId => httpContextAccessor.HttpContext?.User.FindFirstValue(InfrastructureConstants.InstructorId);
     }
 }

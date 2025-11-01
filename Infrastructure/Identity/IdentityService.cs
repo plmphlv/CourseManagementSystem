@@ -39,12 +39,12 @@ namespace Infrastructure.Identity
             }
 
 
-            bool isEmailConfirmed = await userManager.IsEmailConfirmedAsync(user);
+            //bool isEmailConfirmed = await userManager.IsEmailConfirmedAsync(user);
 
-            if (!isEmailConfirmed)
-            {
-                throw new ValidationException("Email is not confirmed");
-            }
+            //if (!isEmailConfirmed)
+            //{
+            //    throw new ValidationException("Email is not confirmed");
+            //}
 
             return isValidPassword;
         }
@@ -177,6 +177,13 @@ namespace Infrastructure.Identity
             await context.SaveChangesAsync(cancellationToken);
 
             return Result.Success();
+        }
+
+        public async Task<User?> FindUserByIdAsync(string id)
+        {
+            User? user = await userManager.FindByIdAsync(id);
+
+            return user;
         }
     }
 }

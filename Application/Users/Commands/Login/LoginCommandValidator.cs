@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-
-namespace Application.Users.Commands.Login
+﻿namespace Application.Users.Commands.Login
 {
     internal class LoginCommandValidator : AbstractValidator<LoginCommand>
     {

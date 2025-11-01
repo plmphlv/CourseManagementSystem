@@ -1,6 +1,4 @@
-﻿using Application.Common.Interfaces;
-using Application.Users.Commands.Common;
-using MediatR;
+﻿using Application.Users.Commands.Common;
 
 namespace Application.Users.Commands.Login
 {

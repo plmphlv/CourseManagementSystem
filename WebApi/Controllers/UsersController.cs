@@ -1,6 +1,7 @@
 ﻿using Application.Users.Commands.ChangePassword;
 using Application.Users.Commands.Common;
 using Application.Users.Commands.Login;
+using Application.Users.Commands.RefreshToken;
 using Application.Users.Commands.Register;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +29,12 @@ namespace WebApi.Controllers
             await Mediator.Send(command);
 
             return NoContent();
+        }
+
+        [HttpPost("RefreshToken")]
+        public async Task<ActionResult<AuthenticationResponse>> RefreshToken([FromBody] RefreshTokenCommand command)
+        {
+            return await Mediator.Send(command);
         }
     }
 }
