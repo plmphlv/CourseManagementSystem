@@ -1,5 +1,6 @@
 ﻿using Application.Instructors.Commands.Create;
 using Application.Instructors.Queries.GetInstructorDetails;
+using Application.Instructors.Queries.GetInstructors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
@@ -16,6 +17,12 @@ namespace WebApi.Controllers
         public async Task<ActionResult<InstructorOutputModel>> GetInstructorDetails([FromRoute] int id)
         {
             return await Mediator.Send(new GetInstructorDetailsQuery { Id = id });
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<InstructorOutputModel>>> GetInstuctors()
+        {
+            return await Mediator.Send(new GetInstuctorsQuery());
         }
     }
 }
