@@ -1,0 +1,145 @@
+﻿using Application.Common.Exceptions;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+namespace WebApi.Filters
+{
+    public class ApiExceptionFilterAttribute : ExceptionFilterAttribute
+    {
+        private readonly IDictionary<Type, Action<ExceptionContext>> exceptionHandlers;
+
+        public ApiExceptionFilterAttribute()
+        {
+            exceptionHandlers = new Dictionary<Type, Action<ExceptionContext>>
+            {
+                { typeof(ValidationException), HandleValidationException},
+                { typeof(NotFoundException), HandleNotFoundException},
+                { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException},
+                { typeof(ForbiddenAccesException), HandleForbiddenAccessException},
+            };
+        }
+
+        public override void OnException(ExceptionContext context)
+        {
+            HandleException(context);
+
+            base.OnException(context);
+        }
+
+        private void HandleException(ExceptionContext context)
+        {
+            Type type = context.Exception.GetType();
+
+            if (exceptionHandlers.ContainsKey(type))
+            {
+                exceptionHandlers[type].Invoke(context);
+                return;
+            }
+
+            if (!context.ModelState.IsValid)
+            {
+                HandleInvalidModelStateException(context);
+                return;
+            }
+        }
+
+        private void HandleValidationException(ExceptionContext context)
+        {
+            ValidationException exception = (ValidationException)context.Exception;
+
+            Dictionary<string, string[]> errors = exception.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            ValidationProblemDetails details = new ValidationProblemDetails(errors)
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            };
+
+            context.Result = new BadRequestObjectResult(details);
+
+            context.ExceptionHandled = true;
+        }
+
+        private void HandleInvalidModelStateException(ExceptionContext context)
+        {
+            ValidationProblemDetails details = new ValidationProblemDetails(context.ModelState)
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            };
+
+            context.Result = new BadRequestObjectResult(details);
+
+            context.ExceptionHandled = true;
+        }
+
+        private void HandleNotFoundException(ExceptionContext context)
+        {
+            ProblemDetails details = new ProblemDetails
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                Title = "The specified resource was not found.",
+                Detail = context.Exception.Message
+            };
+
+            context.Result = new NotFoundObjectResult(details);
+
+            context.ExceptionHandled = true;
+        }
+
+        private void HandleUnauthorizedAccessException(ExceptionContext context)
+        {
+            ProblemDetails detail = new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Type = "https://tools.ietf.org/html/rfc7235#section-3.1"
+            };
+
+            context.Result = new ObjectResult(detail)
+            {
+                StatusCode = StatusCodes.Status401Unauthorized
+            };
+
+            context.ExceptionHandled = true;
+        }
+
+        private void HandleForbiddenAccessException(ExceptionContext context)
+        {
+            var details = new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Forbidden",
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3"
+            };
+
+            context.Result = new ObjectResult(details)
+            {
+                StatusCode = StatusCodes.Status403Forbidden
+            };
+
+            context.ExceptionHandled = true;
+        }
+
+        private void HandleUnknownException(ExceptionContext context)
+        {
+            ProblemDetails details = new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An error occured while processing your request.",
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+            };
+
+            context.Result = new ObjectResult(details)
+            {
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
+
+            context.ExceptionHandled = true;
+        }
+    }
+}
