@@ -28,7 +28,7 @@ namespace Infrastructure
 
             services.AddIdentityCore<User>(options =>
             {
-                options.SignIn.RequireConfirmedAccount = true;
+                //options.SignIn.RequireConfirmedAccount = true;
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = false;
@@ -60,9 +60,7 @@ namespace Infrastructure
 
         private static void AddDbContexts(this IServiceCollection services, IConfiguration configuration)
         {
-            string? connectionString = configuration.GetConnectionString("DbConnection"); 
-            
-           
+            string? connectionString = configuration.GetConnectionString("DbConnection");
 
             services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseSqlServer(

@@ -16,7 +16,7 @@ namespace WebApi.Filters
                 { typeof(ValidationException), HandleValidationException},
                 { typeof(NotFoundException), HandleNotFoundException},
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException},
-                { typeof(ForbiddenAccesException), HandleForbiddenAccessException},
+                { typeof(ForbiddenAccessException), HandleForbiddenAccessException},
             };
         }
 
