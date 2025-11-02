@@ -30,6 +30,16 @@ namespace Infrastructure.Persistence
             await context.SaveChangesAsync(cancellationToken);
         }
 
+        public void DeleteRange(IEnumerable<T> entities)
+        {
+            dbSet.RemoveRange(entities);
+        }
+
+        public async Task<bool> EntityExists(Expression<Func<T, bool>> expression, CancellationToken cancellationToken)
+        {
+            return await dbSet.AnyAsync(expression, cancellationToken);
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> expression, CancellationToken cancellationToken)
         {
             return await dbSet
