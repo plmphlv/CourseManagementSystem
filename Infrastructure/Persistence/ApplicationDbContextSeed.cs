@@ -57,18 +57,25 @@ namespace Infrastructure.Persistence
                 return;
             }
 
-            Course course1 = new Course
-            {
-                Name = "Fundamentals of Programming",
-                Description = "An introductory course to basic programming concepts using C#.",
-                MemberLimit = 25,
-                InstructorId = 1,
-                StartDate = new DateTime(2025, 1, 10),
-                EndDate = new DateTime(2025, 3, 10)
-            };
+            int coursesCount = await context.Courses.CountAsync();
 
-            List<Session> sessions1 = [
-                    new Session
+            if (coursesCount == 0)
+            {
+
+
+
+                Course course1 = new Course
+                {
+                    Name = "Fundamentals of Programming",
+                    Description = "An introductory course to basic programming concepts using C#.",
+                    MemberLimit = 25,
+                    InstructorId = 1,
+                    StartDate = new DateTime(2025, 1, 10),
+                    EndDate = new DateTime(2025, 3, 10)
+                };
+
+                List<Session> sessions1 = [
+                        new Session
                     {
                         Course = course1,
                         InstructorId = 1,
@@ -97,20 +104,20 @@ namespace Infrastructure.Persistence
                     },
             ];
 
-            course1.Sessions = sessions1;
+                course1.Sessions = sessions1;
 
-            Course course2 = new Course
-            {
-                Name = "Advanced Object-Oriented Programming",
-                Description = "Deep dive into OOP principles, patterns, and best practices in C#.",
-                MemberLimit = 18,
-                InstructorId = 1,
-                StartDate = new DateTime(2025, 4, 1),
-                EndDate = new DateTime(2025, 7, 1)
-            };
+                Course course2 = new Course
+                {
+                    Name = "Advanced Object-Oriented Programming",
+                    Description = "Deep dive into OOP principles, patterns, and best practices in C#.",
+                    MemberLimit = 18,
+                    InstructorId = 1,
+                    StartDate = new DateTime(2025, 4, 1),
+                    EndDate = new DateTime(2025, 7, 1)
+                };
 
-            List<Session> sessions2 = [
-                new Session
+                List<Session> sessions2 = [
+                    new Session
                 {
                     Course= course2,
                     InstructorId = 1,
@@ -137,23 +144,23 @@ namespace Infrastructure.Persistence
                     IsConfirmed = true,
                     Notes = "Whem breaking the rules is more beneficial."
                 }
-            ];
-            course2.Sessions = sessions2;
+                ];
+                course2.Sessions = sessions2;
 
-            await context.AddRangeAsync(course1, course2);
-            await context.SaveChangesAsync();
+                await context.AddRangeAsync(course1, course2);
+                await context.SaveChangesAsync();
 
-            CourseMember member = new CourseMember
-            {
-                MemberId = user.Id,
-                CourseId = course2.Id,
-            };
+                CourseMember member = new CourseMember
+                {
+                    MemberId = user.Id,
+                    CourseId = course2.Id,
+                };
 
-            await context.AddAsync(member);
-            await context.SaveChangesAsync();
+                await context.AddAsync(member);
+                await context.SaveChangesAsync();
 
-            List<Schedule> schedules = [
-                new Schedule
+                List<Schedule> schedules = [
+                    new Schedule
                 {
                      IsActive = true,
                      ScheduleDate =new DateTime(2025, 4, 1, 9, 30, 0),
@@ -174,10 +181,11 @@ namespace Infrastructure.Persistence
                      AccountId = user.Id,
                      SessionId = sessions2[2].Id
                 }
-            ];
+                ];
 
-            await context.Schedules.AddRangeAsync(schedules);
-            await context.SaveChangesAsync();
+                await context.Schedules.AddRangeAsync(schedules);
+                await context.SaveChangesAsync();
+            }
         }
 
         public static async Task SeedUsers(ApplicationDbContext context, UserManager<User> userManager, IConfiguration configuration)

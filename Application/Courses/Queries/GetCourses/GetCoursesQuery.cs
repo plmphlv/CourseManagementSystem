@@ -9,6 +9,8 @@ namespace Application.Courses.Queries.GetCourses
 
         public bool? AtCapacity { get; set; }
 
+        public bool? MyCourses { get; set; }
+
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
@@ -17,10 +19,12 @@ namespace Application.Courses.Queries.GetCourses
     public class GetCoursesQueryHandler : IRequestHandler<GetCoursesQuery, List<CourseDto>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICurrentUserService currentUserService;
 
-        public GetCoursesQueryHandler(IUnitOfWork unitOfWork)
+        public GetCoursesQueryHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
         {
             this.unitOfWork = unitOfWork;
+            this.currentUserService = currentUserService;
         }
 
         public async Task<List<CourseDto>> Handle(GetCoursesQuery request, CancellationToken cancellationToken)
@@ -54,6 +58,22 @@ namespace Application.Courses.Queries.GetCourses
                 else
                 {
                     query = query.Where(c => c.Members.Count < c.MemberLimit);
+                }
+            }
+
+            bool? myCourses = request.MyCourses;
+
+            if (myCourses.HasValue)
+            {
+                string userId = currentUserService.UserId!;
+
+                if (myCourses.Value)
+                {
+                    query = query.Where(c => c.Members.Any(cm => cm.MemberId == userId));
+                }
+                else
+                {
+                    query = query.Where(c => !c.Members.Any(cm => cm.MemberId == userId));
                 }
             }
 

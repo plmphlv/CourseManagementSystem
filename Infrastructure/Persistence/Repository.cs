@@ -23,6 +23,13 @@ namespace Infrastructure.Persistence
             await context.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken)
+        {
+            await context.AddRangeAsync(entities);
+
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task DeleteAsync(T entity, CancellationToken cancellationToken)
         {
             dbSet.Remove(entity);
@@ -68,6 +75,13 @@ namespace Infrastructure.Persistence
         public async Task UpdateAsync(T entity, CancellationToken cancellationToken)
         {
             dbSet.Update(entity);
+
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task UpdateAsync(IEnumerable<T> entities, CancellationToken cancellationToken)
+        {
+            dbSet.UpdateRange(entities);
 
             await context.SaveChangesAsync(cancellationToken);
         }

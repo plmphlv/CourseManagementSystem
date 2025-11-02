@@ -1,5 +1,7 @@
 ﻿using Application.Courses.Commands.Create;
 using Application.Courses.Commands.Delete;
+using Application.Courses.Commands.SubscribeToCourse;
+using Application.Courses.Commands.UnsubscribeFromCourse;
 using Application.Courses.Commands.Update;
 using Application.Courses.Queries.GetCourseDetails;
 using Application.Courses.Queries.GetCourses;
@@ -13,6 +15,22 @@ namespace WebApi.Controllers
         public async Task<ActionResult<int>> CreateCourse([FromBody] CreateCourseCommand command)
         {
             return await Mediator.Send(command);
+        }
+
+        [HttpPost("SubscribeToCourse")]
+        public async Task<ActionResult> SubscribeToCourse([FromBody] SubscribeToCourseCommand command)
+        {
+            await Mediator.Send(command);
+
+            return NoContent();
+        }
+
+        [HttpDelete("UnsubscribeFromCourse")]
+        public async Task<ActionResult> UnsubscribeFromCourse([FromBody] UnsubscribeFromCourseCommand command)
+        {
+            await Mediator.Send(command);
+
+            return NoContent();
         }
 
         [HttpPut("{id}")]
