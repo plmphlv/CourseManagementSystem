@@ -94,7 +94,6 @@ namespace Application.Sessions.Commands.Update
 
             session.ScheduledTime = scheduledTime;
             session.DurationMinutes = request.DurationMinutes;
-            session.IsConfirmed = request.IsConfirmed;
             session.Notes = request.Notes;
             session.CourseId = courseId;
             session.InstructorId = instructorId;
@@ -102,17 +101,19 @@ namespace Application.Sessions.Commands.Update
 
             await context.SaveChangesAsync(cancellationToken);
 
-            List<Schedule> schedules = await context.Schedules
-                .Where(s => s.SessionId == id)
-                .ToListAsync(cancellationToken);
-
-            foreach (Schedule schedule in schedules)
+            if (session.IsConfirmed)
             {
-                schedule.IsActive = request.IsConfirmed;
-                schedule.ScheduleDate = scheduledTime;
-            }
+                List<Schedule> schedules = await context.Schedules
+                    .Where(s => s.SessionId == id)
+                    .ToListAsync(cancellationToken);
 
-            await context.SaveChangesAsync(cancellationToken);
+                foreach (Schedule schedule in schedules)
+                {
+                    schedule.ScheduleDate = scheduledTime;
+                }
+
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

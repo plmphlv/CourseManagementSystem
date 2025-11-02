@@ -6,8 +6,6 @@
 
         public int DurationMinutes { get; set; }
 
-        public bool IsConfirmed { get; set; }
-
         public string? Notes { get; set; }
 
         public int CourseId { get; set; }

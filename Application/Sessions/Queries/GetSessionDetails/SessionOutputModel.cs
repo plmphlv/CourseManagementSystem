@@ -11,5 +11,7 @@ namespace Application.Sessions.Queries.GetSessionDetails
         public string InstructorName { get; set; } = null!;
 
         public string? SubstituteInstructorName { get; set; }
+
+        public bool IsConfirmed { get; set; }
     }
 }
