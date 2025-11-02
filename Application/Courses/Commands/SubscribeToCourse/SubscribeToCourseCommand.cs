@@ -31,6 +31,14 @@
 
             string userId = currentUserService.UserId!;
 
+            bool alreadySubscribed = await context.CourseMembers
+                .AnyAsync(cm => cm.CourseId == courseId && cm.MemberId == userId, cancellationToken);
+
+            if (alreadySubscribed)
+            {
+                throw new ValidationException("User is already subscribed to this course.");
+            }
+
             CourseMember subscription = new CourseMember
             {
                 CourseId = request.CourseId,
