@@ -7,11 +7,11 @@ namespace Application.Sessions.Commands.Create
 
     public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand, int>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public CreateSessionCommandHandler(IUnitOfWork unitOfWork)
+        public CreateSessionCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task<int> Handle(CreateSessionCommand request, CancellationToken cancellationToken)
@@ -20,8 +20,8 @@ namespace Application.Sessions.Commands.Create
 
             int courseId = request.CourseId;
 
-            Course? course = await unitOfWork.Courses
-               .GetByIdAsync(courseId, cancellationToken);
+            Course? course = await context.Courses
+               .FirstOrDefaultAsync(c => c.Id == courseId, cancellationToken);
 
             if (course is null)
             {
@@ -30,8 +30,8 @@ namespace Application.Sessions.Commands.Create
 
             int instructorId = request.InstructorId;
 
-            bool instructorExists = await unitOfWork.Instructors
-               .EntityExists(i => i.Id == instructorId, cancellationToken);
+            bool instructorExists = await context.Instructors
+               .AnyAsync(i => i.Id == instructorId, cancellationToken);
 
             if (!instructorExists)
             {
@@ -42,8 +42,8 @@ namespace Application.Sessions.Commands.Create
 
             if (substituteInstructorId.HasValue)
             {
-                bool substituteInstructorExists = await unitOfWork.Instructors
-                   .EntityExists(i => i.Id == substituteInstructorId, cancellationToken);
+                bool substituteInstructorExists = await context.Instructors
+                   .AnyAsync(i => i.Id == substituteInstructorId, cancellationToken);
 
                 if (!instructorExists)
                 {
@@ -65,8 +65,8 @@ namespace Application.Sessions.Commands.Create
                 validationFailures.Add(new ValidationFailure(nameof(Session.ScheduledTime), $"Sessions cannot be scheduled after course end date"));
             }
 
-            bool sessionExists = await unitOfWork.Sessions
-                .EntityExists(s => s.CourseId == courseId &&
+            bool sessionExists = await context.Sessions
+                .AnyAsync(s => s.CourseId == courseId &&
                 s.ScheduledTime == scheduledTime, cancellationToken);
 
             if (sessionExists)
@@ -90,7 +90,7 @@ namespace Application.Sessions.Commands.Create
                 SubstituteInstructorId = substituteInstructorId,
             };
 
-            List<string> users = await unitOfWork.CourseMembers.Query()
+            List<string> users = await context.CourseMembers
                 .Distinct()
                 .Where(cm => cm.CourseId == courseId)
                 .Select(cm => cm.MemberId)
@@ -111,7 +111,8 @@ namespace Application.Sessions.Commands.Create
                 schedules.Add(schedule);
             }
 
-            await unitOfWork.Sessions.AddRangeAsync((IEnumerable<Session>)schedules, cancellationToken);
+            context.Schedules.AddRange(schedules);
+            await context.SaveChangesAsync(cancellationToken);
 
             return session.Id;
         }

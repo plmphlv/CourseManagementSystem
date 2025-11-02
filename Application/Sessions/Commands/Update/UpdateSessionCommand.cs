@@ -10,11 +10,11 @@ namespace Application.Sessions.Commands.Update
 
     public class UpdateSessionCommandHandler : IRequestHandler<UpdateSessionCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public UpdateSessionCommandHandler(IUnitOfWork unitOfWork)
+        public UpdateSessionCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task Handle(UpdateSessionCommand request, CancellationToken cancellationToken)
@@ -23,8 +23,8 @@ namespace Application.Sessions.Commands.Update
 
             List<string> missingEntityMessages = new List<string>();
 
-            Session? session = await unitOfWork.Sessions
-                .GetByIdAsync(id, cancellationToken);
+            Session? session = await context.Sessions
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (session is null)
             {
@@ -33,8 +33,8 @@ namespace Application.Sessions.Commands.Update
 
             int courseId = request.CourseId;
 
-            Course? course = await unitOfWork.Courses
-               .GetByIdAsync(courseId, cancellationToken);
+            Course? course = await context.Courses
+               .FirstOrDefaultAsync(c => c.Id == courseId, cancellationToken);
 
             if (course is null)
             {
@@ -43,24 +43,24 @@ namespace Application.Sessions.Commands.Update
 
             int instructorId = request.InstructorId;
 
-            bool instructorExists = await unitOfWork.Instructors
-               .EntityExists(i => i.Id == instructorId, cancellationToken);
+            bool instructorExists = await context.Instructors
+               .AnyAsync(i => i.Id == instructorId, cancellationToken);
 
             if (!instructorExists)
             {
-                missingEntityMessages.Add($"{nameof(Instructor)} with Id:{courseId} was not found");
+                missingEntityMessages.Add($"{nameof(Instructor)} with Id:{instructorId} was not found");
             }
 
             int? substituteInstructorId = request.SubstituteInstructorId;
 
             if (substituteInstructorId.HasValue)
             {
-                bool substituteInstructorExists = await unitOfWork.Instructors
-                   .EntityExists(i => i.Id == substituteInstructorId, cancellationToken);
+                bool substituteInstructorExists = await context.Instructors
+                   .AnyAsync(i => i.Id == substituteInstructorId, cancellationToken);
 
-                if (!instructorExists)
+                if (!substituteInstructorExists)
                 {
-                    missingEntityMessages.Add($"{nameof(Instructor)} with Id:{courseId} was not found");
+                    missingEntityMessages.Add($"{nameof(Instructor)} with Id:{substituteInstructorId} was not found");
                 }
             }
 
@@ -78,8 +78,8 @@ namespace Application.Sessions.Commands.Update
                 validationFailures.Add(new ValidationFailure(nameof(Session.ScheduledTime), $"Sessions cannot be scheduled after course end date"));
             }
 
-            bool sessionExists = await unitOfWork.Sessions
-                .EntityExists(s => s.CourseId == courseId &&
+            bool sessionExists = await context.Sessions
+                .AnyAsync(s => s.CourseId == courseId &&
                 s.ScheduledTime == scheduledTime, cancellationToken);
 
             if (sessionExists)
@@ -100,11 +100,10 @@ namespace Application.Sessions.Commands.Update
             session.InstructorId = instructorId;
             session.SubstituteInstructorId = substituteInstructorId;
 
-            await unitOfWork.Sessions.UpdateAsync(session, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
-            List<Schedule> schedules = await unitOfWork.Schedules
-                .Query()
-                .Where(s=>s.SessionId==id)
+            List<Schedule> schedules = await context.Schedules
+                .Where(s => s.SessionId == id)
                 .ToListAsync(cancellationToken);
 
             foreach (Schedule schedule in schedules)
@@ -113,7 +112,7 @@ namespace Application.Sessions.Commands.Update
                 schedule.ScheduleDate = scheduledTime;
             }
 
-            await unitOfWork.Schedules.UpdateAsync(schedules, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

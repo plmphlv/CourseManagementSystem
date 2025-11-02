@@ -7,42 +7,41 @@
 
     public class DeleteCourseCommandHandler : IRequestHandler<DeleteCourseCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public DeleteCourseCommandHandler(IUnitOfWork unitOfWork)
+        public DeleteCourseCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task Handle(DeleteCourseCommand request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            Course? course = await unitOfWork.Courses.GetByIdAsync(id, cancellationToken);
+            Course? course = await context.Courses.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
             if (course is null)
             {
                 throw new NotFoundException(nameof(Course), id);
             }
 
-            List<Session> sessions = await unitOfWork.Sessions
-                .Query()
+            List<Session> sessions = await context.Sessions
                 .Where(s => s.CourseId == id)
                 .ToListAsync(cancellationToken);
 
             HashSet<int> sessionsIds = sessions.Select(s => s.Id)
                 .ToHashSet();
 
-            List<Schedule> schedules = await unitOfWork.Schedules
-                .Query()
+            List<Schedule> schedules = await context.Schedules
                 .Where(s => sessionsIds.Contains(s.SessionId))
                 .ToListAsync(cancellationToken);
 
-            unitOfWork.Sessions.DeleteRange(sessions);
-            unitOfWork.Schedules.DeleteRange(schedules);
+            context.Sessions.RemoveRange(sessions);
+            context.Schedules.RemoveRange(schedules);
 
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            await unitOfWork.Courses.DeleteAsync(course, cancellationToken);
+            context.Courses.Remove(course);
+
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -6,16 +6,15 @@ namespace Application.Users.Instructors.Queries.GetInstructors
 
     public class GetInstuctorsQueryHandler : IRequestHandler<GetInstuctorsQuery, List<InstructorOutputModel>>
     {
-        private readonly IUnitOfWork unitOfWork;
-        public GetInstuctorsQueryHandler(IUnitOfWork unitOfWork)
+        private readonly IApplicationDbContext context;
+        public GetInstuctorsQueryHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task<List<InstructorOutputModel>> Handle(GetInstuctorsQuery request, CancellationToken cancellationToken)
         {
-            List<InstructorOutputModel> instructors = await unitOfWork.Instructors
-                .Query()
+            List<InstructorOutputModel> instructors = await context.Instructors
                 .Select(i => new InstructorOutputModel
                 {
                     Id = i.Id,

@@ -61,9 +61,6 @@ namespace Infrastructure.Persistence
 
             if (coursesCount == 0)
             {
-
-
-
                 Course course1 = new Course
                 {
                     Name = "Fundamentals of Programming",

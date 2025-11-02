@@ -7,32 +7,34 @@
 
     public class DeleteSessionCommandHandler : IRequestHandler<DeleteSessionCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public DeleteSessionCommandHandler(IUnitOfWork unitOfWork)
+        public DeleteSessionCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task Handle(DeleteSessionCommand request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            Session? session = await unitOfWork.Sessions
-                .GetByIdAsync(id, cancellationToken);
+            Session? session = await context.Sessions
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (session is null)
             {
                 throw new NotFoundException(nameof(Session), id);
             }
 
-            List<Schedule> schedules = await unitOfWork.Schedules
-                .Query()
+            context.Sessions.Remove(session);
+            await context.SaveChangesAsync(cancellationToken);
+
+            List<Schedule> schedules = await context.Schedules
                 .Where(s => s.SessionId == id)
                 .ToListAsync(cancellationToken);
 
-            unitOfWork.Schedules.DeleteRange(schedules);
-            await unitOfWork.Sessions.DeleteAsync(session, cancellationToken);
+            context.Schedules.RemoveRange(schedules);
+            await context.SaveChangesAsync(cancellationToken);
 
         }
     }

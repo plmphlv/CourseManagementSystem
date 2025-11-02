@@ -7,13 +7,13 @@
 
     public class SubscribeToCourseCommandHandler : IRequestHandler<SubscribeToCourseCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
         private readonly ICurrentUserService currentUserService;
 
-        public SubscribeToCourseCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+        public SubscribeToCourseCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
             this.currentUserService = currentUserService;
         }
 
@@ -21,8 +21,8 @@
         {
             int courseId = request.CourseId;
 
-            bool courseExists = await unitOfWork.Courses
-                .EntityExists(c => c.Id == courseId, cancellationToken);
+            bool courseExists = await context.Courses
+                .AnyAsync(c => c.Id == courseId, cancellationToken);
 
             if (!courseExists)
             {
@@ -37,10 +37,11 @@
                 MemberId = userId
             };
 
-            await unitOfWork.CourseMembers.AddAsync(subscription,cancellationToken);
+            context.CourseMembers.Add(subscription);
+            await context.SaveChangesAsync(cancellationToken);
 
-            List<Session> sessions = await unitOfWork.Sessions
-                .Query(s => s.CourseId == courseId).ToListAsync(cancellationToken);
+            List<Session> sessions = await context.Sessions
+                .Where(s => s.CourseId == courseId).ToListAsync(cancellationToken);
 
             List<Schedule> schedules = new List<Schedule>();
 
@@ -55,7 +56,9 @@
                 });
             }
 
-            await unitOfWork.Schedules.AddRangeAsync(schedules, cancellationToken);
+            context.Schedules.AddRange(schedules);
+
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -18,18 +18,18 @@ namespace Application.Courses.Queries.GetCourses
 
     public class GetCoursesQueryHandler : IRequestHandler<GetCoursesQuery, List<CourseDto>>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
         private readonly ICurrentUserService currentUserService;
 
-        public GetCoursesQueryHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+        public GetCoursesQueryHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
             this.currentUserService = currentUserService;
         }
 
         public async Task<List<CourseDto>> Handle(GetCoursesQuery request, CancellationToken cancellationToken)
         {
-            IQueryable<Course> query = unitOfWork.Courses.Query();
+            IQueryable<Course> query = context.Courses;
 
             string? searchKeyword = request.SearchKeyword;
 

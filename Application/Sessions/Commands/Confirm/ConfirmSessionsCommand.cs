@@ -7,19 +7,19 @@
 
     public class ConfirmSessionsCommandHandler : IRequestHandler<ConfirmSessionsCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public ConfirmSessionsCommandHandler(IUnitOfWork unitOfWork)
+        public ConfirmSessionsCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task Handle(ConfirmSessionsCommand request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            Session? session = await unitOfWork.Sessions
-                .GetByIdAsync(id, cancellationToken);
+            Session? session = await context.Sessions
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (session is null)
             {
@@ -28,10 +28,9 @@
 
             session.IsConfirmed = true;
 
-            await unitOfWork.Sessions.UpdateAsync(session, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
-            List<Schedule> schedules = await unitOfWork.Schedules
-               .Query()
+            List<Schedule> schedules = await context.Schedules
                .Where(s => s.SessionId == id)
                .ToListAsync(cancellationToken);
 
@@ -40,7 +39,7 @@
                 schedule.IsActive = true;
             }
 
-            await unitOfWork.Schedules.UpdateAsync(schedules, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

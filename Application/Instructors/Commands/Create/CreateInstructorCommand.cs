@@ -12,12 +12,12 @@ namespace Application.Instructors.Commands.Create
     {
         private readonly IIdentityService identityService;
 
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public CreateInstructorCommandHandler(IIdentityService identityService, IUnitOfWork unitOfWork)
+        public CreateInstructorCommandHandler(IIdentityService identityService, IApplicationDbContext context)
         {
             this.identityService = identityService;
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
         public async Task<int> Handle(CreateInstructorCommand request, CancellationToken cancellationToken)
         {
@@ -35,7 +35,9 @@ namespace Application.Instructors.Commands.Create
                 UserId = userId
             };
 
-            await unitOfWork.Instructors.AddAsync(instructor, cancellationToken);
+             context.Instructors.Add(instructor);
+
+            await context.SaveChangesAsync(cancellationToken);
 
             string role = Role.Instructor.ToString();
             Result result = await identityService.AddRoleAsync(userId, role, cancellationToken);

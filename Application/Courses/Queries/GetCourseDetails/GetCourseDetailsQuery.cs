@@ -9,13 +9,13 @@ namespace Application.Courses.Queries.GetCourseDetails
     public class GetCourseDetailsQueryHandler : IRequestHandler<GetCourseDetailsQuery, CourseOutputModel>
     {
         private readonly IDateTime dateTime;
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
         private readonly ICurrentUserService currentUserService;
 
-        public GetCourseDetailsQueryHandler(IDateTime dateTime, IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+        public GetCourseDetailsQueryHandler(IDateTime dateTime, IApplicationDbContext context, ICurrentUserService currentUserService)
         {
             this.dateTime = dateTime;
-            this.unitOfWork = unitOfWork;
+            this.context = context;
             this.currentUserService = currentUserService;
         }
 
@@ -23,8 +23,8 @@ namespace Application.Courses.Queries.GetCourseDetails
         {
             int id = request.Id;
 
-            CourseOutputModel? course = await unitOfWork.Courses
-                .Query(c => c.Id == id)
+            CourseOutputModel? course = await context.Courses
+                .Where(c => c.Id == id)
                 .Select(c => new CourseOutputModel
                 {
                     Id = id,
@@ -44,8 +44,8 @@ namespace Application.Courses.Queries.GetCourseDetails
 
             string userId = currentUserService.UserId!;
 
-            bool isSublscribedToCourse = await unitOfWork.CourseMembers
-                .EntityExists(cm => cm.MemberId == userId && cm.CourseId == id, cancellationToken);
+            bool isSublscribedToCourse = await context.CourseMembers
+                .AnyAsync(cm => cm.MemberId == userId && cm.CourseId == id, cancellationToken);
 
             if (!isSublscribedToCourse)
             {
@@ -54,8 +54,8 @@ namespace Application.Courses.Queries.GetCourseDetails
                 return course;
             }
 
-            HashSet<int> sessionIds = await unitOfWork.Sessions
-                .Query(s => s.CourseId == id)
+            HashSet<int> sessionIds = await context.Sessions
+                .Where(s => s.CourseId == id)
                 .Select(s => s.Id)
                 .ToHashSetAsync(cancellationToken);
 
@@ -70,8 +70,8 @@ namespace Application.Courses.Queries.GetCourseDetails
 
             DateTime now = dateTime.Now;
 
-            int completedSessions = await unitOfWork.Schedules
-                .Query(s => 
+            int completedSessions = await context.Schedules
+                .Where(s =>
                 s.AccountId == userId &&
                 s.ScheduleDate < now &&
                 sessionIds.Contains(s.SessionId) &&

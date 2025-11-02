@@ -7,11 +7,11 @@
 
     public class UnsubscribeFromCourseCommandHandler : IRequestHandler<UnsubscribeFromCourseCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
         private readonly ICurrentUserService currentUserService;
-        public UnsubscribeFromCourseCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+        public UnsubscribeFromCourseCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
             this.currentUserService = currentUserService;
         }
         public async Task Handle(UnsubscribeFromCourseCommand request, CancellationToken cancellationToken)
@@ -19,8 +19,7 @@
             int courseId = request.CourseId;
             string userId = currentUserService.UserId!;
 
-            CourseMember? subscription = await unitOfWork.CourseMembers
-                .Query()
+            CourseMember? subscription = await context.CourseMembers
                 .Where(cm => cm.CourseId == courseId && cm.MemberId == userId)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -29,14 +28,15 @@
                 throw new NotFoundException(nameof(CourseMember), $"CourseId: {courseId}, MemberId: {userId}");
             }
 
-            await unitOfWork.CourseMembers.DeleteAsync(subscription, cancellationToken);
+            context.CourseMembers.Remove(subscription);
 
-            IEnumerable<Schedule> schedules = await unitOfWork.Schedules
-                .GetAllAsync(s => s.AccountId == userId && s.Session.CourseId == courseId, cancellationToken);
+            List<Schedule> schedules = await context.Schedules
+                .Where(s => s.AccountId == userId && s.Session.CourseId == courseId)
+                .ToListAsync(cancellationToken);
 
-            unitOfWork.Schedules.DeleteRange(schedules);
+            context.Schedules.RemoveRange(schedules);
 
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -7,17 +7,17 @@
 
     public class CancelSessionsCommandHandler : IRequestHandler<CancelSessionsCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
-        public CancelSessionsCommandHandler(IUnitOfWork unitOfWork)
+        private readonly IApplicationDbContext context;
+        public CancelSessionsCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
         public async Task Handle(CancelSessionsCommand request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            Session? session = await unitOfWork.Sessions
-                .GetByIdAsync(id, cancellationToken);
+            Session? session = await context.Sessions
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (session is null)
             {
@@ -25,10 +25,10 @@
             }
 
             session.IsConfirmed = false;
-            await unitOfWork.Sessions.UpdateAsync(session, cancellationToken);
 
-            List<Schedule> schedules = await unitOfWork.Schedules
-               .Query()
+            await context.SaveChangesAsync(cancellationToken);
+
+            List<Schedule> schedules = await context.Schedules
                .Where(s => s.SessionId == id)
                .ToListAsync(cancellationToken);
 
@@ -37,7 +37,7 @@
                 schedule.IsActive = false;
             }
 
-            await unitOfWork.Schedules.UpdateAsync(schedules, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -8,19 +8,18 @@ namespace Application.Sessions.Queries.GetSessionDetails
 
    public class GetSessionDetailsQueryHandler : IRequestHandler<GetSessionDetailsQuery, SessionOutputModel>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public GetSessionDetailsQueryHandler(IUnitOfWork unitOfWork)
+        public GetSessionDetailsQueryHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task<SessionOutputModel> Handle(GetSessionDetailsQuery request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            SessionOutputModel? session = await unitOfWork.Sessions.Query()
-                
+            SessionOutputModel? session = await context.Sessions
                 .Where(s => s.Id == id)
                 .Select(s => new SessionOutputModel
                 {

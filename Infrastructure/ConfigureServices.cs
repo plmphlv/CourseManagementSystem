@@ -69,7 +69,6 @@ namespace Infrastructure
                             b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
         }
 
         private static void AddTokenBasedAuthentication(this IServiceCollection services, IConfiguration configuration)

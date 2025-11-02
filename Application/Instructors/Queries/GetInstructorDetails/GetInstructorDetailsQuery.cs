@@ -7,19 +7,19 @@
 
     public class GetInstructorDetailsQueryHandler : IRequestHandler<GetInstructorDetailsQuery, InstructorOutputModel>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public GetInstructorDetailsQueryHandler(IUnitOfWork unitOfWork)
+        public GetInstructorDetailsQueryHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task<InstructorOutputModel> Handle(GetInstructorDetailsQuery request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            InstructorOutputModel? instructor = await unitOfWork.Instructors
-                .Query(i => i.Id == id)
+            InstructorOutputModel? instructor = await context.Instructors
+                .Where(i => i.Id == id)
                 .Select(i => new InstructorOutputModel
                 {
                     Id = i.Id,

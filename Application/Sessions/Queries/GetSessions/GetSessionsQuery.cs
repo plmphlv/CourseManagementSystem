@@ -19,16 +19,16 @@
     public class GetSessionsQueryHandler : IRequestHandler<GetSessionsQuery, List<SessionDto>>
     {
 
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public GetSessionsQueryHandler(IUnitOfWork unitOfWork)
+        public GetSessionsQueryHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task<List<SessionDto>> Handle(GetSessionsQuery request, CancellationToken cancellationToken)
         {
-            IQueryable<Session> query = unitOfWork.Sessions.Query();
+            IQueryable<Session> query = context.Sessions;
 
 
             bool? isConfirmed = request.IsConfirmed;

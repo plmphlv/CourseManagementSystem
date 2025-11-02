@@ -7,19 +7,19 @@
 
     public class ConfirmScheduleCommandHandler : IRequestHandler<ConfirmScheduleCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public ConfirmScheduleCommandHandler(IUnitOfWork unitOfWork)
+        public ConfirmScheduleCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task Handle(ConfirmScheduleCommand request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            Schedule? schedule = await unitOfWork.Schedules
-                .GetByIdAsync(id, cancellationToken);
+            Schedule? schedule = await context.Schedules
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (schedule is null)
             {
@@ -28,7 +28,7 @@
 
             schedule.IsActive = true;
 
-            await unitOfWork.Schedules.UpdateAsync(schedule, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

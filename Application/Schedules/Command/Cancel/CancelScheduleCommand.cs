@@ -7,19 +7,19 @@
 
     public class CancelScheduleCommandHandler : IRequestHandler<CancelScheduleCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public CancelScheduleCommandHandler(IUnitOfWork unitOfWork)
+        public CancelScheduleCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task Handle(CancelScheduleCommand request, CancellationToken cancellationToken)
         {
             int id = request.Id;
 
-            Schedule? schedule = await unitOfWork.Schedules
-                .GetByIdAsync(id, cancellationToken);
+            Schedule? schedule = await context.Schedules
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (schedule is null)
             {
@@ -28,7 +28,7 @@
 
             schedule.IsActive = false;
 
-            await unitOfWork.Schedules.UpdateAsync(schedule, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

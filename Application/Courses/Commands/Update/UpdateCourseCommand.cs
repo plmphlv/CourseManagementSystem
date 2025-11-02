@@ -10,12 +10,12 @@ namespace Application.Courses.Commands.Update
 
     public class UpdateCourseCommandHandler : IRequestHandler<UpdateCourseCommand>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
         private readonly IDateTime dateTime;
 
-        public UpdateCourseCommandHandler(IUnitOfWork unitOfWork, IDateTime dateTime)
+        public UpdateCourseCommandHandler(IApplicationDbContext context, IDateTime dateTime)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
             this.dateTime = dateTime;
         }
 
@@ -23,7 +23,7 @@ namespace Application.Courses.Commands.Update
         {
             int id = request.Id;
 
-            Course? course = await unitOfWork.Courses.GetByIdAsync(id, cancellationToken);
+            Course? course = await context.Courses.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
             if (course is null)
             {
@@ -32,7 +32,7 @@ namespace Application.Courses.Commands.Update
 
             List<ValidationFailure> failures = [];
 
-            List<Session> sessionsScheduled = await unitOfWork.Sessions.Query()
+            List<Session> sessionsScheduled = await context.Sessions
                 .Where(s => s.CourseId == id)
                 .ToListAsync(cancellationToken);
 
@@ -78,7 +78,7 @@ namespace Application.Courses.Commands.Update
             course.Name = request.Name;
             course.Description = request.Description;
 
-            await unitOfWork.Courses.UpdateAsync(course, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

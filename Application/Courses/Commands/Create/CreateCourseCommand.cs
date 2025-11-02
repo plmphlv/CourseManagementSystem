@@ -12,20 +12,20 @@ namespace Application.Courses.Commands.Create
 
     public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, int>
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IApplicationDbContext context;
 
-        public CreateCourseCommandHandler(IUnitOfWork unitOfWork)
+        public CreateCourseCommandHandler(IApplicationDbContext context)
         {
-            this.unitOfWork = unitOfWork;
+            this.context = context;
         }
 
         public async Task<int> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
         {
             int instructorId = request.InstructorId;
 
-            bool instructorExists = await unitOfWork
+            bool instructorExists = await context
                 .Instructors
-                .EntityExists(i => i.Id == instructorId, cancellationToken);
+                .AnyAsync(i => i.Id == instructorId, cancellationToken);
 
             if (!instructorExists)
             {
@@ -33,9 +33,9 @@ namespace Application.Courses.Commands.Create
             }
 
             string name = request.Name;
-            bool isCourseNameTaken = await unitOfWork
+            bool isCourseNameTaken = await context
                 .Courses
-                .EntityExists(i => i.Name == name, cancellationToken);
+                .AnyAsync(i => i.Name == name, cancellationToken);
 
             if (isCourseNameTaken)
             {
@@ -67,7 +67,7 @@ namespace Application.Courses.Commands.Create
                 course.Sessions.Add(session);
             }
 
-            await unitOfWork.Courses.AddAsync(course, cancellationToken);
+            await context.Courses.AddAsync(course, cancellationToken);
 
             return course.Id;
         }
