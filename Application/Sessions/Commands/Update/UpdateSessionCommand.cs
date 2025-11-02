@@ -101,19 +101,16 @@ namespace Application.Sessions.Commands.Update
 
             await context.SaveChangesAsync(cancellationToken);
 
-            if (session.IsConfirmed)
+            List<Schedule> schedules = await context.Schedules
+                .Where(s => s.SessionId == id)
+                .ToListAsync(cancellationToken);
+
+            foreach (Schedule schedule in schedules)
             {
-                List<Schedule> schedules = await context.Schedules
-                    .Where(s => s.SessionId == id)
-                    .ToListAsync(cancellationToken);
-
-                foreach (Schedule schedule in schedules)
-                {
-                    schedule.ScheduleDate = scheduledTime;
-                }
-
-                await context.SaveChangesAsync(cancellationToken);
+                schedule.ScheduleDate = scheduledTime;
             }
+
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

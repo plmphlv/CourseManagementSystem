@@ -3,7 +3,7 @@ using FluentValidation.Results;
 
 namespace Application.Sessions.Commands.Create
 {
-    public class CreateSessionCommand : SessionModel, IRequest<int> 
+    public class CreateSessionCommand : SessionModel, IRequest<int>
     {
         public bool IsConfirmed { get; set; }
     }
@@ -83,45 +83,40 @@ namespace Application.Sessions.Commands.Create
                 throw new ValidationException(validationFailures);
             }
 
-            bool isConfirmed = request.IsConfirmed;
-
             Session session = new Session
             {
                 ScheduledTime = scheduledTime,
                 DurationMinutes = request.DurationMinutes,
-                IsConfirmed = isConfirmed,
+                IsConfirmed = request.IsConfirmed,
                 Notes = request.Notes,
                 CourseId = courseId,
                 InstructorId = instructorId,
                 SubstituteInstructorId = substituteInstructorId,
             };
 
-            if (isConfirmed)
+            List<string> users = await context.CourseMembers
+                .Distinct()
+                .Where(cm => cm.CourseId == courseId)
+                .Select(cm => cm.MemberId)
+                .ToListAsync(cancellationToken);
+
+            List<Schedule> schedules = new List<Schedule>();
+
+            foreach (string userId in users)
             {
-                List<string> users = await context.CourseMembers
-                    .Distinct()
-                    .Where(cm => cm.CourseId == courseId)
-                    .Select(cm => cm.MemberId)
-                    .ToListAsync(cancellationToken);
-
-                List<Schedule> schedules = new List<Schedule>();
-
-                foreach (string userId in users)
+                Schedule schedule = new Schedule
                 {
-                    Schedule schedule = new Schedule
-                    {
-                        Session = session,
-                        AccountId = userId,
-                        IsActive = session.IsConfirmed,
-                        ScheduleDate = session.ScheduledTime,
-                    };
+                    Session = session,
+                    AccountId = userId,
+                    IsActive = session.IsConfirmed,
+                    ScheduleDate = session.ScheduledTime,
+                };
 
-                    schedules.Add(schedule);
-                }
-
-                context.Schedules.AddRange(schedules);
-                await context.SaveChangesAsync(cancellationToken);
+                schedules.Add(schedule);
             }
+
+            context.Schedules.AddRange(schedules);
+            await context.SaveChangesAsync(cancellationToken);
 
             return session.Id;
         }
